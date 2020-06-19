@@ -1,0 +1,4 @@
+1 100 False
+3 100 False
+3 100 True
+3 50 True

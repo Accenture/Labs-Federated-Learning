@@ -3,46 +3,43 @@
 ## Download the dependencies
 This work is done using PyTorch 1.4.0 .
 
+
 ## Datasets
-The datasets used for MNIST iid, MNIST non-iid, and Shakespeare are in the `data` folder.  To better distinguish MNIST iid from MNIST non-iid, these two datasets are respectively called `MNIST-iid` and `MNIST-shard` in all this repository.
+The datasets used for MNIST iid, MNIST non-iid, CIFAR-10 and Shakespeare can be downloaded using the python code in the `data` folder.
+To better distinguish MNIST iid from MNIST non-iid, these two datasets are respectively called `MNIST-iid` and `MNIST-shard`.
+More details in the paper about how the datasets are built.
+
 
 ## Initial Models
-The initial models used for the comparison between federated learning and free-riding can be found in `variables` as `model_MNIST_0.pth` for MNIST-iid and MNIST non-iid and as `model_shakespeare_0.pth` for Shakespeare.
+In `variables` are saved the initial models used for the comparisons between free-riding and federated learning for each dataset:
+`model_MNIST_0.pth` for MNIST-iid and MNIST non-iid, `model_CIFAR-10_0.pth` for CIFAR-10, and `model_shakespeare_0.pth` for Shakespeare.
+
 
 ## Simple plot
-As a lot of simulations are needed to get Figure 1 and Figure 2, we propose `simple_plot.py` computing a plot for FedAvg, MNIST-iid, E=5 and 300 iterations. This code run three experiments: FedAvg with fair clients, with one plain freerider and with one disguised freerider for $\sigma$ and $\gamma=1$. The plot is saved in `plots` as `simple_experiements.png`.
+Since the computation of Figures 1 and 2 requires many experiemnts to be performed, we propose `simple_experiment.sh` computing a plot for FedAvg, MNIST-iid, 5 epochs and 300 iterations. This code runs three experiments: FedAvg with fair clients, one plain freerider, and one disguised freerider for $\sigma$ and $\gamma=1$. 
+The plot is saved in `plots` as `simple_experiment.png`.
+
 
 ## Figure 1 and 2, and the associated plots in Appendix
 
 ### Running the experiments
-`one_freerider.py` and `many_freeriders.py`are the two code files needed to run all the experiments needed for these plots. They are respectively for running experiments with only one free-rider and with many free-riders (5 and 45 in the paper). They both take as input nine arguments in the following order:
+`free-riding.py` is the code needed to run the experiments needed for the paper's plots with one or many free-riders (5 and 45 in the paper). The code take as input eight arguments in the following order:
 - `algo`: the federated learning algorithm used. Either the string "FedAvg" or "FedProx".
-- `dataset`: the federated learning dataset used for the experiment. Either the string “MNIST-iid”, “MNIST-shard” or “shakespeare”.
-- `epochs`: the number of epochs run by the fair clients at each iteration. Either 5 or 20.
--  `experiment type`. Either the string “FL”, to run the federated learning algorithm for the saved initialization, “none” to run plain free-riding, “add” to run disguised free-riding, or “manyXX” to run federated learning with a random initialization where XX is the experiment number. In our paper, XX ranges from 0 to 29.
-- `noise_shape`. Either the string `linear` or `exp` for exponential. In the paper we are only using `linear`.
-- `coef`: the coefficient multiplying the standard deviation obtained with the heuristic in the paper. Either 1 or 3.
-- `power`: the $\gamma$ in $\varphi(t)$. In the paper experiments either 0.5,1 or 2.
-- `n_freeriders`. The number of free-riders used for the experiment. In the paper we use 1, 5 or 45. `one_freerider.py` only works with 1 and `many_freerider.py` only works with 5 and 45. 
-- `redo`: a Boolean equal to True to rerun the experiments with the same values for all the fields above.
+- `dataset`: the federated learning dataset used for the experiment. Either the string “MNIST-iid”, “MNIST-shard”, "CIFAR-10" or “shakespeare”.
+- `epochs`: the number of epochs run by the fair clients at each iteration. Only 5 and 20 are used in the paper.
+- `experiment type`. The string “FL” to run federated learning with no attackers and the dataset saved initial model, “plain” to run plain free-riding, “disguised” to run disguised free-riding, or “manyXX” to run federated learning with a random initialization where XX is the experiment number. In our paper, XX ranges from 0 to 29.
+- `coef`: the scalar multiplying the standard deviation obtained with the paper's heuristic. 1 and 3 used in the paper.
+- `power`: the $\gamma$ in $\varphi(t)$. 0.5, 1 or 2 used for the paper experiments.
+- `n_freeriders`. Number of free-riders used for the experiment. In the paper we use 1, 5 or 45. 
+- `redo`: Boolean needed to rerun an experiment.
 
-Each experiment saves the loss and accuracy history in the folder `variables`, the global model at each iteration in `saved_models` and the final server model in `models_s`.
-In the folder `txt_to_run_experiments` can be found the .txt files listing all the experiments settings to run for each python file. Each row in the txt file is for one experiment.
+`coef` and `power` are only taken into account if `experiment_type` has "disguised" as an input. These fields still need to be filled for any other `experiment_type` but will not be taken into account.
+
+Each experiment saves the loss and the accuracy history in respectively `hist/acc` and `hist/loss`, the model at the end of the training in `saved_models/final`, and the history of the global model at every iteration in `saved_models/hist`.
+
+### Experiments run for the paper
+
+In `txt_to_run_experiments`, the code `generate_txt_files_experiments.py` creates, once run, `experiments.txt` including at each row the info of an experiment to parse as an input to `free-riding.py`.
 
 ### Plotting the figures
-To plot Figure 1 and Figure 2, the code to use are respectively `get_fig1.py` and `get_fig2.py`. To plot Figure 1 and all the associated plot, all the simulations with the settings in the .txt file `single_freerider.txt` and `single_freerider_for_confidence_interval.txt` need to be run. Similarly for Figure 2,  all the simulations with the settings in the .txt file `multiple_freerider.txt` and `multiple_freerider_for_confidence_interval.txt` need to be run.
-
-Before running `get_fig1.py` or `get_fig2.py`, it is important to run `create_history_for_KS_L2_plot.py`. This code creates the metric history for the KS and L2 test at each iteration by using all the global model saved in `saved_models`. Other metric can be computed with this history.
-
-
-## Figure 3 and 4
-### Running the experiments
-`improve_disguise.py` runs the experiments used for Figure 3 and 4. This code takes the following three arguments:
-- `n_gaussians`: the number of Gaussian used in the Gaussian mixture model,
-- `cycle`: the number of iterations before the free-rider computes a new standard deviation with the heuristic,
-- `outliers`: Boolean equal to True if the free-rider is generating some outliers in its parameters distribution.
-
-In the folder `txt_to_run_experiments` can be found `improve_disguised.txt`, the file listing the four experiments settings used to create Figure 4. Each experiment saves in the folder `fig4` the loss history, accuracy history, global model history and local model history of each client 
-
-### Plotting the Figures
-`get_fig_3_4.py` plots the Figure 3 and 4 using the files obtained with the four experiments run with `improve_disguise.py`.
+Figure 1, Figure 2 and their annexes' derivatives are obtained with `get_figs.py`. These code will run without error only if all the simulations with parameters in `experiments.txt` are run.

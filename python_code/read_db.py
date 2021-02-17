@@ -8,18 +8,15 @@ import numpy as np
 
 
 class MnistiidDataset(Dataset):
-    """
-    Convert the pickle file into a Dataset that can be read by pytorch models
-    """    
+    """Convert the MNIST pkl file into a Pytorch Dataset"""    
+    
     def __init__(self,file_path,k):
         
         with open('data/MNIST/'+file_path, 'rb') as pickle_file:
             self.dataset= pickle.load(pickle_file)[k]
     
-    
     def __len__(self):
         return len(self.dataset)
-
     
     def __getitem__(self,idx):
         
@@ -48,11 +45,8 @@ def clients_set_MNIST_iid(file_name,n_clients,batch_size=100, shuffle=True):
 
 
 class MnistShardDataset(Dataset):
-    """
-    PyTorch needs DataLoaders as an input for the Networks
-    This class is needed to transform the input arrays into an input for 
-    the `DataLoader` object.
-    """
+    """Convert the MNIST pkl file into a Pytorch Dataset""" 
+    
     def __init__(self,file_path,k):
         
         with open('data/MNIST/'+file_path, 'rb') as pickle_file:
@@ -65,10 +59,8 @@ class MnistShardDataset(Dataset):
            
             self.labels=np.array(vector_labels)
     
-    
     def __len__(self):
         return len(self.features)
-
     
     def __getitem__(self,idx):
         
@@ -96,19 +88,54 @@ def clients_set_MNIST_shard(file_name,n_clients,batch_size=100,shuffle=True):
 
 
 
+class CIFARDataset(Dataset):
+    """Convert the CIFAR pkl file into a Pytorch Dataset"""
+    def __init__(self,file_path,k):
+        
+        dataset= pickle.load(open('data/CIFAR-10/'+file_path, 'rb'))
+        
+        self.X=dataset[0][k]
+        self.y=np.array(dataset[1][k])
+    
+    
+    def __len__(self):
+        return len(self.X)
+
+    
+    def __getitem__(self,idx):
+        
+        #3D input 32x32x3
+        x=torch.Tensor(self.X[idx]).permute(2,0,1)
+        y=self.y[idx]
+        
+        return x,y
+    
+    
+
+def clients_set_CIFAR(file_name,n_clients,batch_size=100,shuffle=True):
+    """Download for all the clients their respective dataset"""    
+    print('data/CIFAR-10/'+file_name) 
+            
+    list_dl=list()
+    for k in range(n_clients):
+        dataset_object=CIFARDataset(file_name,k)      
+        dataset_dl=DataLoader(dataset_object, batch_size=batch_size, 
+            shuffle=shuffle)  
+        list_dl.append(dataset_dl)
+
+    return list_dl
+
+
+
 class ShakespeareDataset(Dataset):
-    """
-    Convert the pickle file into a Dataset that can be read by pytorch models
-    """ 
+    """Convert the Shakespeare pkl file into a Pytorch Dataset"""
+    
     def __init__(self,file_path,k):
         
         with open('data/shakespeare/'+file_path, 'rb') as pickle_file:
             dataset= pickle.load(pickle_file)
-            
             self.features=dataset[0][k]
             self.labels=dataset[1][k]
-            
-            self.one_hot=torch.nn.functional.one_hot
     
     
     def __len__(self):
@@ -117,9 +144,7 @@ class ShakespeareDataset(Dataset):
     
     def __getitem__(self,idx):
         
-        #3D input 1x28x28
         x=torch.Tensor(self.features[idx]).long()
-        
         
         y = torch.ones((1,), dtype=torch.long)
         y=y.new_tensor(self.labels[idx][0])
@@ -128,7 +153,8 @@ class ShakespeareDataset(Dataset):
 
 
 
-def clients_set_shakespeare(file_name,n_clients,batch_size=100,shuffle=True):
+def clients_set_shakespeare(file_name:str, n_clients:int, batch_size=100, 
+    shuffle=True):
     """Download for all the clients their respective dataset"""    
     
     print('data/shakespeare/'+file_name) 
@@ -146,7 +172,7 @@ def clients_set_shakespeare(file_name,n_clients,batch_size=100,shuffle=True):
 def download_dataset(dataset,n_clients,samples_clients_training=0,
         samples_clients_test=0,batch_size=100,shuffle=True):
     """Download for all the clients their respective dataset and convert
-    those PyTorch Dataset object ad PyTorch DataLoader object that can be read 
+    those PyTorch Dataset object ad PyTorch DataLoader objects that can be read 
     by models."""
            
 
@@ -170,6 +196,16 @@ def download_dataset(dataset,n_clients,samples_clients_training=0,
         testing_dls=clients_set_MNIST_shard(test_path,n_clients)
         
         fr_samples=samples_clients_training
+        
+        
+    elif dataset=="CIFAR-10":
+        train_path=f"CIFAR_iid_train_{n_clients}_{samples_clients_training}.pkl"
+        training_dls=clients_set_CIFAR(train_path,n_clients)
+        
+        test_path=f"CIFAR_iid_test_{n_clients}_{samples_clients_test}.pkl"
+        testing_dls=clients_set_CIFAR(test_path,n_clients)
+        
+        fr_samples=samples_clients_training  
         
         
     elif dataset=="shakespeare":

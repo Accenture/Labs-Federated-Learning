@@ -17,13 +17,34 @@ class MultinomialLogisticRegression(torch.nn.Module):
         return outputs
 
 
-def loss_MNIST(predictions,labels):
-    
-    predictions_soft=F.log_softmax(predictions,dim=1)
 
-    loss=F.nll_loss(predictions_soft,labels.view(-1))
-    
-    return loss
+
+class CNN_CIFAR(torch.nn.Module):
+   """Model Used by the paper introducing FedAvg"""
+   def __init__(self):
+        super(CNN_CIFAR, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3,out_channels=32, kernel_size=(3,3))
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3))
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3))
+        
+        self.fc1 = nn.Linear(4*4*64, 64)
+        self.fc2 = nn.Linear(64, 10)
+
+   def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2, 2)
+        
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2, 2)
+        
+        x=self.conv3(x)
+        x = x.view(-1, 4*4*64)
+        
+        x = F.relu(self.fc1(x))
+        
+        x = self.fc2(x)
+        return x
+        
 
 
 class LSTM_Shakespeare(torch.nn.Module):
@@ -55,7 +76,4 @@ class LSTM_Shakespeare(torch.nn.Module):
 
         self.hidden=(torch.zeros(self.n_layers, batch_size, self.hidden_dim),
                 torch.zeros(self.n_layers, batch_size, self.hidden_dim))
-
-
-
-
+        

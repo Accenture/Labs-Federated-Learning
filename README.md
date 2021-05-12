@@ -1,5 +1,7 @@
 # Free-rider Attacks on Model Aggregation in Federated Learning
 
+This paper can be found [here](http://proceedings.mlr.press/v130/fraboni21a.html).
+
 ## Download the dependencies
 This work is done using PyTorch 1.4.0 .
 

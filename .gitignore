@@ -1,0 +1,8 @@
+*.pyc
+*.png
+*.pth
+*.pkl
+data/MNIST/*
+data/cifar*
+*.pdf
+experiments_info/*.py

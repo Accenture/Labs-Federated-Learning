@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 from numpy.random import dirichlet
 
 
-def dirichlet_one(ax, data: np.array, alpha: float, n_classes: int, n_clients: int):
+def dirichlet_one(
+    ax, data: np.array, alpha: float, n_classes: int, n_clients: int
+):
 
     category_names = [i for i in range(n_classes)]
     labels = [str(digit) for digit in np.random.randn(n_clients)]

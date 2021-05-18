@@ -45,7 +45,9 @@ def get_metric_evo(
 
             def rolling_window(a, window):
 
-                return np.array([a[i : i + window] for i in range(len(a) - window + 1)])
+                return np.array(
+                    [a[i : i + window] for i in range(len(a) - window + 1)]
+                )
 
             ysmooth = np.mean(rolling_window(y, window), axis=1)
             ysmooth_std = np.std(rolling_window(y, window), axis=1)

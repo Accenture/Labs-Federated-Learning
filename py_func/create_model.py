@@ -50,9 +50,15 @@ class CNN_CIFAR_dropout(torch.nn.Module):
 
     def __init__(self):
         super(CNN_CIFAR_dropout, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3))
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3))
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3))
+        self.conv1 = nn.Conv2d(
+            in_channels=3, out_channels=32, kernel_size=(3, 3)
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=64, kernel_size=(3, 3)
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=(3, 3)
+        )
 
         self.fc1 = nn.Linear(4 * 4 * 64, 64)
         self.fc2 = nn.Linear(64, 10)

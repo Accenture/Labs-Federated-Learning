@@ -191,7 +191,9 @@ def metric_evo(
 
             def rolling_window(a, window):
 
-                return np.array([a[i : i + window] for i in range(len(a) - window + 1)])
+                return np.array(
+                    [a[i : i + window] for i in range(len(a) - window + 1)]
+                )
 
             ysmooth = np.mean(rolling_window(y, window), axis=1)
             ysmooth_std = np.std(rolling_window(y, window), axis=1)
@@ -213,7 +215,9 @@ def metric_evo(
         acc_hists = [acc_hists[idx] for idx in idx_kept]
         lx = []
         for hist in acc_hists:
-            lx.append(plot_hist_mean(hist, weights, axis, idx_row, idx_col, smooth)[0])
+            lx.append(
+                plot_hist_mean(hist, weights, axis, idx_row, idx_col, smooth)[0]
+            )
     except:
         pass
 
@@ -231,7 +235,12 @@ def plot_fig_CIFAR10_N_and_m_one(
 ):
 
     kept = ["MD", "Alg. 1", "Alg. 2"]
-    plot_names = ["N=10 and m=10", "N=500 and m=10", "N=100 and m=5", "N=100 and m=20"]
+    plot_names = [
+        "N=10 and m=10",
+        "N=500 and m=10",
+        "N=100 and m=5",
+        "N=100 and m=20",
+    ]
 
     n_rows, n_cols = 2, 2
     dataset_base = "CIFAR10"

@@ -46,7 +46,9 @@ def get_metric_evo(
 
             def rolling_window(a, window):
 
-                return np.array([a[i : i + window] for i in range(len(a) - window + 1)])
+                return np.array(
+                    [a[i : i + window] for i in range(len(a) - window + 1)]
+                )
 
             ysmooth = np.mean(rolling_window(y, window), axis=1)
             ysmooth_std = np.std(rolling_window(y, window), axis=1)
@@ -99,7 +101,9 @@ def get_metric_evo(
         axis[idx_row].legend(kept_legend, title=r"$\bf{Sampling}$")
 
 
-def plot_regularization(alpha: float, n_SGD: int, p: float, mu: float, lr: float):
+def plot_regularization(
+    alpha: float, n_SGD: int, p: float, mu: float, lr: float
+):
 
     kept = ["FedAvg", "MD", "Alg. 1", "Alg. 2"]
 

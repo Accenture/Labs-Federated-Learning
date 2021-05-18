@@ -9,7 +9,15 @@ import pickle as pkl
 from plots_func.common_funcs import get_acc_loss
 
 
-names_legend = ["MD", "Alg. 2 L2", "Alg. 2 L1", "Alg. 2", "Target", "Alg. 1", "FedAvg"]
+names_legend = [
+    "MD",
+    "Alg. 2 L2",
+    "Alg. 2 L1",
+    "Alg. 2",
+    "Target",
+    "Alg. 1",
+    "FedAvg",
+]
 
 
 def get_n_diff_types(hist_sampled_clients, sampling_type: str, iter_max: int):
@@ -22,7 +30,9 @@ def get_n_diff_types(hist_sampled_clients, sampling_type: str, iter_max: int):
         for i in range(10):
             hist_sampled_clients[j, i * 10 : (i + 1) * 10] *= i + 1
 
-    n_diff_clients = np.array([len(set(row)) - 1 for row in hist_sampled_clients])
+    n_diff_clients = np.array(
+        [len(set(row)) - 1 for row in hist_sampled_clients]
+    )
     return n_diff_clients[:iter_max]
 
 
@@ -101,7 +111,9 @@ def plot_fig_alg2(
 
         X = np.where(hist_mean > 0)[0]
 
-        hist_std = np.sqrt(np.average((hist - hist_mean[:, None]) ** 2, 1, weights))
+        hist_std = np.sqrt(
+            np.average((hist - hist_mean[:, None]) ** 2, 1, weights)
+        )
         y = hist_std[X]
 
         plt.plot(X, y)
@@ -150,6 +162,10 @@ def plot_fig_alg2(
 
     plt.tight_layout(pad=0.0)
     fig.legend(
-        l_x, labels=kept, title=r"$\bf{Sampling}$", ncol=2, bbox_to_anchor=(1.0, 0.9)
+        l_x,
+        labels=kept,
+        title=r"$\bf{Sampling}$",
+        ncol=2,
+        bbox_to_anchor=(1.0, 0.9),
     )
     plt.savefig(f"plots/plot_fig_improved_MNIST.pdf")

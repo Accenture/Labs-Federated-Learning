@@ -7,7 +7,9 @@ import os
 """UPLOADING THE DATASETS"""
 import sys
 
-print("dataset - sampling - sim_type - seed - n_SGD - lr - decay - p - force - mu")
+print(
+    "dataset - sampling - sim_type - seed - n_SGD - lr - decay - p - force - mu"
+)
 print(sys.argv[1:])
 
 dataset = sys.argv[1]
@@ -40,7 +42,9 @@ print("regularization term", mu)
 """NAME UNDER WHICH THE EXPERIMENT'S VARIABLES WILL BE SAVED"""
 from py_func.hyperparams import get_file_name
 
-file_name = get_file_name(dataset, sampling, sim_type, seed, n_SGD, lr, decay, p, mu)
+file_name = get_file_name(
+    dataset, sampling, sim_type, seed, n_SGD, lr, decay, p, mu
+)
 print(file_name)
 
 

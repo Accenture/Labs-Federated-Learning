@@ -132,7 +132,9 @@ def get_matrix_similarity(global_m, local_models, distance_type):
     return metric_matrix
 
 
-def get_clusters_with_alg2(linkage_matrix: np.array, n_sampled: int, weights: np.array):
+def get_clusters_with_alg2(
+    linkage_matrix: np.array, n_sampled: int, weights: np.array
+):
     """Algorithm 2"""
     epsilon = int(10 ** 10)
 
@@ -143,11 +145,15 @@ def get_clusters_with_alg2(linkage_matrix: np.array, n_sampled: int, weights: np
     for i in range(len(link_matrix_p)):
         idx_1, idx_2 = int(link_matrix_p[i, 0]), int(link_matrix_p[i, 1])
 
-        new_weight = np.array([augmented_weights[idx_1] + augmented_weights[idx_2]])
+        new_weight = np.array(
+            [augmented_weights[idx_1] + augmented_weights[idx_2]]
+        )
         augmented_weights = np.concatenate((augmented_weights, new_weight))
         link_matrix_p[i, 2] = int(new_weight * epsilon)
 
-    clusters = fcluster(link_matrix_p, int(epsilon / n_sampled), criterion="distance")
+    clusters = fcluster(
+        link_matrix_p, int(epsilon / n_sampled), criterion="distance"
+    )
 
     n_clients, n_clusters = len(clusters), len(set(clusters))
 
@@ -167,7 +173,9 @@ def get_clusters_with_alg2(linkage_matrix: np.array, n_sampled: int, weights: np
 
     for idx, cluster in enumerate(kept_clusters):
         for client in np.where(clusters == cluster)[0]:
-            distri_clusters[idx, client] = int(weights[client] * n_sampled * epsilon)
+            distri_clusters[idx, client] = int(
+                weights[client] * n_sampled * epsilon
+            )
 
     k = 0
     for j in pop_clusters[: n_clusters - n_sampled, 0]:

@@ -111,7 +111,10 @@ def difference_models_norm_2(model_1, model_2):
     tensor_2 = list(model_2.parameters())
 
     norm = sum(
-        [torch.sum((tensor_1[i] - tensor_2[i]) ** 2) for i in range(len(tensor_1))]
+        [
+            torch.sum((tensor_1[i] - tensor_2[i]) ** 2)
+            for i in range(len(tensor_1))
+        ]
     )
 
     return norm
@@ -202,7 +205,9 @@ def FedProx_sampling_random(
         clients_params = []
 
         np.random.seed(i)
-        sampled_clients = np.random.randint(K, size=n_sampled)
+        sampled_clients = np.random.choice(
+            K, size=n_sampled, replace=True, p=weights
+        )
 
         for k in sampled_clients:
 
@@ -210,7 +215,12 @@ def FedProx_sampling_random(
             local_optimizer = optim.SGD(local_model.parameters(), lr=lr)
 
             local_learning(
-                local_model, mu, local_optimizer, training_sets[k], n_SGD, loss_f
+                local_model,
+                mu,
+                local_optimizer,
+                training_sets[k],
+                n_SGD,
+                loss_f,
             )
 
             # GET THE PARAMETER TENSORS OF THE MODEL
@@ -228,7 +238,9 @@ def FedProx_sampling_random(
         if i % metric_period == 0:
             # COMPUTE THE LOSS/ACCURACY OF THE DIFFERENT CLIENTS WITH THE NEW MODEL
             for k, dl in enumerate(training_sets):
-                loss_hist[i + 1, k] = float(loss_dataset(model, dl, loss_f).detach())
+                loss_hist[i + 1, k] = float(
+                    loss_dataset(model, dl, loss_f).detach()
+                )
 
             for k, dl in enumerate(testing_sets):
                 acc_hist[i + 1, k] = accuracy_dataset(model, dl)
@@ -250,7 +262,9 @@ def FedProx_sampling_random(
     save_pkl(acc_hist, "acc", file_name)
     save_pkl(sampled_clients_hist, "sampled_clients", file_name)
 
-    torch.save(model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth")
+    torch.save(
+        model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth"
+    )
 
     return model, loss_hist, acc_hist
 
@@ -341,7 +355,9 @@ def FedProx_clustered_sampling(
             print("MD sampling")
 
             np.random.seed(i)
-            sampled_clients = np.random.randint(K, size=n_sampled)
+            sampled_clients = np.random.choice(
+                K, size=n_sampled, replace=True, p=weights
+            )
 
             for k in sampled_clients:
 
@@ -349,12 +365,19 @@ def FedProx_clustered_sampling(
                 local_optimizer = optim.SGD(local_model.parameters(), lr=lr)
 
                 local_learning(
-                    local_model, mu, local_optimizer, training_sets[k], n_SGD, loss_f
+                    local_model,
+                    mu,
+                    local_optimizer,
+                    training_sets[k],
+                    n_SGD,
+                    loss_f,
                 )
 
                 # SAVE THE LOCAL MODEL TRAINED
                 list_params = list(local_model.parameters())
-                list_params = [tens_param.detach() for tens_param in list_params]
+                list_params = [
+                    tens_param.detach() for tens_param in list_params
+                ]
                 clients_params.append(list_params)
                 clients_models.append(deepcopy(local_model))
 
@@ -382,12 +405,19 @@ def FedProx_clustered_sampling(
                 local_optimizer = optim.SGD(local_model.parameters(), lr=lr)
 
                 local_learning(
-                    local_model, mu, local_optimizer, training_sets[k], n_SGD, loss_f
+                    local_model,
+                    mu,
+                    local_optimizer,
+                    training_sets[k],
+                    n_SGD,
+                    loss_f,
                 )
 
                 # SAVE THE LOCAL MODEL TRAINED
                 list_params = list(local_model.parameters())
-                list_params = [tens_param.detach() for tens_param in list_params]
+                list_params = [
+                    tens_param.detach() for tens_param in list_params
+                ]
                 clients_params.append(list_params)
                 clients_models.append(deepcopy(local_model))
 
@@ -403,7 +433,9 @@ def FedProx_clustered_sampling(
         if i % metric_period == 0:
 
             for k, dl in enumerate(training_sets):
-                loss_hist[i + 1, k] = float(loss_dataset(model, dl, loss_f).detach())
+                loss_hist[i + 1, k] = float(
+                    loss_dataset(model, dl, loss_f).detach()
+                )
 
             for k, dl in enumerate(testing_sets):
                 acc_hist[i + 1, k] = accuracy_dataset(model, dl)
@@ -417,7 +449,9 @@ def FedProx_clustered_sampling(
 
         # UPDATE THE HISTORY OF LATEST GRADIENT
         if sampling == "clustered_2":
-            gradients_i = get_gradients(sampling, previous_global_model, clients_models)
+            gradients_i = get_gradients(
+                sampling, previous_global_model, clients_models
+            )
             for idx, gradient in zip(sampled_clients_for_grad, gradients_i):
                 gradients[idx] = gradient
 
@@ -430,7 +464,9 @@ def FedProx_clustered_sampling(
     save_pkl(acc_hist, "acc", file_name)
     save_pkl(sampled_clients_hist, "sampled_clients", file_name)
 
-    torch.save(model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth")
+    torch.save(
+        model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth"
+    )
 
     return model, loss_hist, acc_hist
 
@@ -472,7 +508,10 @@ def FedProx_sampling_target(
     print("Clients' weights:", weights)
 
     loss_hist = [
-        [float(loss_dataset(model, dl, loss_f).detach()) for dl in training_sets]
+        [
+            float(loss_dataset(model, dl, loss_f).detach())
+            for dl in training_sets
+        ]
     ]
     acc_hist = [[accuracy_dataset(model, dl) for dl in testing_sets]]
     server_hist = [
@@ -481,8 +520,12 @@ def FedProx_sampling_target(
     models_hist = []
     sampled_clients_hist = []
 
-    server_loss = sum([weights[i] * loss_hist[-1][i] for i in range(len(weights))])
-    server_acc = sum([weights[i] * acc_hist[-1][i] for i in range(len(weights))])
+    server_loss = sum(
+        [weights[i] * loss_hist[-1][i] for i in range(len(weights))]
+    )
+    server_acc = sum(
+        [weights[i] * acc_hist[-1][i] for i in range(len(weights))]
+    )
     print(f"====> i: 0 Loss: {server_loss} Server Test Accuracy: {server_acc}")
 
     for i in range(n_iter):
@@ -499,7 +542,12 @@ def FedProx_sampling_target(
             local_optimizer = optim.SGD(local_model.parameters(), lr=lr)
 
             local_learning(
-                local_model, mu, local_optimizer, training_sets[k], n_SGD, loss_f
+                local_model,
+                mu,
+                local_optimizer,
+                training_sets[k],
+                n_SGD,
+                loss_f,
             )
 
             # GET THE PARAMETER TENSORS OF THE MODEL
@@ -518,14 +566,23 @@ def FedProx_sampling_target(
 
         # COMPUTE THE LOSS/ACCURACY OF THE DIFFERENT CLIENTS WITH THE NEW MODEL
         loss_hist += [
-            [float(loss_dataset(model, dl, loss_f).detach()) for dl in training_sets]
+            [
+                float(loss_dataset(model, dl, loss_f).detach())
+                for dl in training_sets
+            ]
         ]
         acc_hist += [[accuracy_dataset(model, dl) for dl in testing_sets]]
 
-        server_loss = sum([weights[i] * loss_hist[-1][i] for i in range(len(weights))])
-        server_acc = sum([weights[i] * acc_hist[-1][i] for i in range(len(weights))])
+        server_loss = sum(
+            [weights[i] * loss_hist[-1][i] for i in range(len(weights))]
+        )
+        server_acc = sum(
+            [weights[i] * acc_hist[-1][i] for i in range(len(weights))]
+        )
 
-        print(f"====> i: {i+1} Loss: {server_loss} Server Test Accuracy: {server_acc}")
+        print(
+            f"====> i: {i+1} Loss: {server_loss} Server Test Accuracy: {server_acc}"
+        )
 
         server_hist.append(deepcopy(model))
 
@@ -541,7 +598,9 @@ def FedProx_sampling_target(
     save_pkl(acc_hist, "acc", file_name)
     save_pkl(sampled_clients_hist, "sampled_clients", file_name)
 
-    torch.save(model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth")
+    torch.save(
+        model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth"
+    )
 
     return model, loss_hist, acc_hist
 
@@ -612,7 +671,12 @@ def FedProx_FedAvg_sampling(
             local_optimizer = optim.SGD(local_model.parameters(), lr=lr)
 
             local_learning(
-                local_model, mu, local_optimizer, training_sets[k], n_SGD, loss_f
+                local_model,
+                mu,
+                local_optimizer,
+                training_sets[k],
+                n_SGD,
+                loss_f,
             )
 
             # GET THE PARAMETER TENSORS OF THE MODEL
@@ -632,7 +696,9 @@ def FedProx_FedAvg_sampling(
         if i % metric_period == 0:
             # COMPUTE THE LOSS/ACCURACY OF THE DIFFERENT CLIENTS WITH THE NEW MODEL
             for k, dl in enumerate(training_sets):
-                loss_hist[i + 1, k] = float(loss_dataset(model, dl, loss_f).detach())
+                loss_hist[i + 1, k] = float(
+                    loss_dataset(model, dl, loss_f).detach()
+                )
 
             for k, dl in enumerate(testing_sets):
                 acc_hist[i + 1, k] = accuracy_dataset(model, dl)
@@ -654,6 +720,8 @@ def FedProx_FedAvg_sampling(
     save_pkl(acc_hist, "acc", file_name)
     save_pkl(sampled_clients_hist, "sampled_clients", file_name)
 
-    torch.save(model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth")
+    torch.save(
+        model.state_dict(), f"saved_exp_info/final_model/{file_name}.pth"
+    )
 
     return model, loss_hist, acc_hist

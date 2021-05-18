@@ -190,7 +190,9 @@ def metric_evo(
 
             def rolling_window(a, window):
 
-                return np.array([a[i : i + window] for i in range(len(a) - window + 1)])
+                return np.array(
+                    [a[i : i + window] for i in range(len(a) - window + 1)]
+                )
 
             ysmooth = np.mean(rolling_window(y, window), axis=1)
             ysmooth_std = np.std(rolling_window(y, window), axis=1)
@@ -214,7 +216,9 @@ def metric_evo(
         metric_hists = [metric_hists[idx] for idx in idx_kept]
         lx = []
         for hist in metric_hists:
-            lx.append(plot_hist_mean(hist, weights, axis, idx_row, idx_col, smooth)[0])
+            lx.append(
+                plot_hist_mean(hist, weights, axis, idx_row, idx_col, smooth)[0]
+            )
     except:
         pass
     axis[idx_row, idx_col].set_title(plot_name)

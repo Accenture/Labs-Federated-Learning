@@ -48,7 +48,9 @@ def create_MNIST_ds_1shard_per_client(n_clients, samples_train, samples_test):
             row_train, shard_train = get_1shard(
                 MNIST_train, row_train, i, samples_train
             )
-            row_test, shard_test = get_1shard(MNIST_test, row_test, i, samples_test)
+            row_test, shard_test = get_1shard(
+                MNIST_test, row_test, i, samples_test
+            )
 
             shards_train.append([shard_train])
             shards_test.append([shard_test])
@@ -72,7 +74,10 @@ def create_MNIST_ds_1shard_per_client(n_clients, samples_train, samples_test):
 
 
 def create_MNIST_small_niid(
-    n_clients: int, samples_train: list, samples_test: list, clients_digits: list
+    n_clients: int,
+    samples_train: list,
+    samples_test: list,
+    clients_digits: list,
 ):
 
     MNIST_train = datasets.MNIST(root="./data", train=True, download=True)
@@ -81,7 +86,9 @@ def create_MNIST_small_niid(
     X_train, X_test = [], []
     y_train, y_test = [], []
 
-    for digits, n_train, n_test in zip(clients_digits, samples_train, samples_test):
+    for digits, n_train, n_test in zip(
+        clients_digits, samples_train, samples_test
+    ):
 
         client_samples_train, client_samples_test = [], []
         client_labels_train, client_labels_test = [], []
@@ -95,7 +102,9 @@ def create_MNIST_small_niid(
             _, shard_train = get_1shard(
                 MNIST_train, row_train, digit, n_train_per_shard
             )
-            _, shard_test = get_1shard(MNIST_test, row_test, digit, n_test_per_shard)
+            _, shard_test = get_1shard(
+                MNIST_test, row_test, digit, n_test_per_shard
+            )
 
             client_samples_train += shard_train
             client_samples_test += shard_test
@@ -153,7 +162,9 @@ def clients_set_MNIST_shard(file_name, n_clients, batch_size=100, shuffle=True):
     list_dl = list()
     for k in range(n_clients):
         dataset_object = MnistShardDataset(file_name, k)
-        dataset_dl = DataLoader(dataset_object, batch_size=batch_size, shuffle=shuffle)
+        dataset_dl = DataLoader(
+            dataset_object, batch_size=batch_size, shuffle=shuffle
+        )
         list_dl.append(dataset_dl)
 
     return list_dl
@@ -184,7 +195,9 @@ def partition_CIFAR_dataset(
     if balanced:
         n_samples = [500] * n_clients
     elif not balanced and train:
-        n_samples = [100] * 10 + [250] * 30 + [500] * 30 + [750] * 20 + [1000] * 10
+        n_samples = (
+            [100] * 10 + [250] * 30 + [500] * 30 + [750] * 20 + [1000] * 10
+        )
     elif not balanced and not train:
         n_samples = [20] * 10 + [50] * 30 + [100] * 30 + [150] * 20 + [200] * 10
 
@@ -226,7 +239,11 @@ def partition_CIFAR_dataset(
 
 
 def create_CIFAR10_dirichlet(
-    dataset_name: str, balanced: bool, alpha: float, n_clients: int, n_classes: int
+    dataset_name: str,
+    balanced: bool,
+    alpha: float,
+    n_clients: int,
+    n_classes: int,
 ):
     """Create a CIFAR dataset partitioned according to a
     dirichilet distribution Dir(alpha)"""
@@ -236,21 +253,39 @@ def create_CIFAR10_dirichlet(
     matrix = dirichlet([alpha] * n_classes, size=n_clients)
 
     CIFAR10_train = datasets.CIFAR10(
-        root="./data", train=True, download=True, transform=transforms.ToTensor()
+        root="./data",
+        train=True,
+        download=True,
+        transform=transforms.ToTensor(),
     )
 
     CIFAR10_test = datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transforms.ToTensor()
+        root="./data",
+        train=False,
+        download=True,
+        transform=transforms.ToTensor(),
     )
 
     file_name_train = f"{dataset_name}_train_{n_clients}.pkl"
     partition_CIFAR_dataset(
-        CIFAR10_train, file_name_train, balanced, matrix, n_clients, n_classes, True
+        CIFAR10_train,
+        file_name_train,
+        balanced,
+        matrix,
+        n_clients,
+        n_classes,
+        True,
     )
 
     file_name_test = f"{dataset_name}_test_{n_clients}.pkl"
     partition_CIFAR_dataset(
-        CIFAR10_test, file_name_test, balanced, matrix, n_clients, n_classes, False
+        CIFAR10_test,
+        file_name_test,
+        balanced,
+        matrix,
+        n_clients,
+        n_classes,
+        False,
     )
 
 
@@ -277,7 +312,9 @@ class CIFARDataset(Dataset):
         return x, y
 
 
-def clients_set_CIFAR(file_name: str, n_clients: int, batch_size: int, shuffle=True):
+def clients_set_CIFAR(
+    file_name: str, n_clients: int, batch_size: int, shuffle=True
+):
     """Download for all the clients their respective dataset"""
     print(file_name)
 
@@ -286,7 +323,9 @@ def clients_set_CIFAR(file_name: str, n_clients: int, batch_size: int, shuffle=T
     for k in range(n_clients):
         dataset_object = CIFARDataset(file_name, k)
 
-        dataset_dl = DataLoader(dataset_object, batch_size=batch_size, shuffle=shuffle)
+        dataset_dl = DataLoader(
+            dataset_object, batch_size=batch_size, shuffle=shuffle
+        )
 
         list_dl.append(dataset_dl)
 
@@ -311,7 +350,10 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
         samples_train, samples_test = 600, 100
 
         mnist_trainset = datasets.MNIST(
-            root="./data", train=True, download=True, transform=transforms.ToTensor()
+            root="./data",
+            train=True,
+            download=True,
+            transform=transforms.ToTensor(),
         )
         mnist_train_split = torch.utils.data.random_split(
             mnist_trainset, [samples_train] * n_clients
@@ -322,7 +364,10 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
         ]
 
         mnist_testset = datasets.MNIST(
-            root="./data", train=False, download=True, transform=transforms.ToTensor()
+            root="./data",
+            train=False,
+            download=True,
+            transform=transforms.ToTensor(),
         )
         mnist_test_split = torch.utils.data.random_split(
             mnist_testset, [samples_test] * n_clients
@@ -343,7 +388,9 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
         path_test = folder + file_name_test
 
         if not os.path.isfile(path_train):
-            create_MNIST_ds_1shard_per_client(n_clients, samples_train, samples_test)
+            create_MNIST_ds_1shard_per_client(
+                n_clients, samples_train, samples_test
+            )
 
         list_dls_train = clients_set_MNIST_shard(
             path_train, n_clients, batch_size=batch_size, shuffle=shuffle
@@ -358,7 +405,10 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
         samples_train, samples_test = 500, 100
 
         CIFAR10_train = datasets.CIFAR10(
-            root="./data", train=True, download=True, transform=transforms.ToTensor()
+            root="./data",
+            train=True,
+            download=True,
+            transform=transforms.ToTensor(),
         )
         CIFAR10_train_split = torch.utils.data.random_split(
             CIFAR10_train, [samples_train] * n_clients
@@ -369,7 +419,10 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
         ]
 
         CIFAR10_test = datasets.CIFAR10(
-            root="./data", train=False, download=True, transform=transforms.ToTensor()
+            root="./data",
+            train=False,
+            download=True,
+            transform=transforms.ToTensor(),
         )
         CIFAR10_test_split = torch.utils.data.random_split(
             CIFAR10_test, [samples_test] * n_clients
@@ -394,11 +447,17 @@ def get_dataloaders(dataset, batch_size: int, shuffle=True):
 
         if not os.path.isfile(path_train):
             print("creating dataset alpha:", alpha)
-            create_CIFAR10_dirichlet(dataset, balanced, alpha, n_clients, n_classes)
+            create_CIFAR10_dirichlet(
+                dataset, balanced, alpha, n_clients, n_classes
+            )
 
-        list_dls_train = clients_set_CIFAR(path_train, n_clients, batch_size, True)
+        list_dls_train = clients_set_CIFAR(
+            path_train, n_clients, batch_size, True
+        )
 
-        list_dls_test = clients_set_CIFAR(path_test, n_clients, batch_size, True)
+        list_dls_test = clients_set_CIFAR(
+            path_test, n_clients, batch_size, True
+        )
 
     # Save in a file the number of samples owned per client
     list_len = list()

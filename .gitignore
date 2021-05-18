@@ -1,0 +1,7 @@
+*.pyc
+*.pkl
+*.pth
+*.png
+*.pdf
+data/MNIST/MNIST/*
+

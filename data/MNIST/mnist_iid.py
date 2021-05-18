@@ -7,41 +7,36 @@ import torch
 
 import pickle
 
-# In[2]:
-#PARAMETERS
-n_clients=5
-samples_clients_training=600
-samples_clients_test=300
 
-#DOWNLOAD/LOAD MNIST DATASET
-MNIST_train = datasets.MNIST(root='', train=True, download=True)
-MNIST_test = datasets.MNIST(root='', train=False, download=True)
+# PARAMETERS
+n_clients = 5
+n_train_samples = 600
+n_test_samples = 300
+
+# DOWNLOAD/LOAD MNIST DATASET
+MNIST_train = datasets.MNIST(root="", train=True, download=True)
+MNIST_test = datasets.MNIST(root="", train=False, download=True)
 
 
-#CHECKING IG THE GIVEN PARAMETERS ARE FEASIBLE
-if n_clients*samples_clients_training>len(MNIST_train):
-    print("TOTAL NUMBER OF REQURIED TRAINING SAMPLES FOR THE CHOSEN PARAMETERS TOO HIGH")
-    
-if n_clients*samples_clients_test>len(MNIST_test):
-    print("TOTAL NUMBER OF REQURIED TESTING SAMPLES FOR THE CHOSEN PARAMETERS TOO HIGH")
-# In[2]:
-    
-list_client_samples_training=[samples_clients_training]*n_clients+[len(MNIST_train)-n_clients*samples_clients_training]
-list_client_samples_test=[samples_clients_test]*n_clients+[len(MNIST_test)-n_clients*samples_clients_test]
+# REPARTITION OF THE CLIENTS SAMPLES
+list_train_samples = [n_train_samples] * n_clients + [
+    len(MNIST_train) - n_clients * n_train_samples
+]
+list_test_samples = [n_test_samples] * n_clients + [
+    len(MNIST_test) - n_clients * n_test_samples
+]
 
-train_data=torch.utils.data.random_split(MNIST_train,list_client_samples_training)[:-1]
-test_data=torch.utils.data.random_split(MNIST_test,list_client_samples_test)[:-1]
-# In[2]: 
-train_path=f"MNIST_iid_train_{n_clients}_{samples_clients_training}.pkl"
-with open(train_path, 'wb') as output:
+train_data = torch.utils.data.random_split(MNIST_train, list_train_samples)[:-1]
+test_data = torch.utils.data.random_split(MNIST_test, list_test_samples)[:-1]
+
+
+# SAVE THE CREATED DATASETS
+train_path = f"MNIST_iid_train_{n_clients}_{n_train_samples}.pkl"
+with open(train_path, "wb") as output:
     pickle.dump(train_data, output)
-    
-test_path=f"MNIST_iid_test_{n_clients}_{samples_clients_test}.pkl"
-with open(test_path, 'wb') as output:
+
+test_path = f"MNIST_iid_test_{n_clients}_{n_test_samples}.pkl"
+with open(test_path, "wb") as output:
     pickle.dump(test_data, output)
-    
-    
-    
-    
-    
-    
+
+print("DATASETS CREATED")

@@ -1,6 +1,6 @@
-# On the Impact of Client Sampling on Federated Learning Convergence
+# A General Theory for Client Sampling in Federated Learning
 
-This paper can be found here.
+This paper can be found [here](https://arxiv.org/abs/2107.12211).
 
 ## Download the Dependencies
 

@@ -6,6 +6,9 @@
 - Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. Clustered Sampling: Low-Variance and Improved Representativity for Clients Selection in Federated Learning. *ICML 2021*
   - The paper can be found [here](http://proceedings.mlr.press/v139/fraboni21a.html).
   - The code can be found [here](https://github.com/Accenture/Labs-Federated-Learning/tree/clustered_sampling).  
-- Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. On the Impact of Client Sampling on Federated Learning Convergence.
-  - The paper can be found [here]().
+- Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. A General Theory for Client Sampling in Federated Learning. *FL-IJCAI'22*
+  - The paper can be found [here](https://arxiv.org/abs/2107.12211).
   - The code can be found [here](https://github.com/Accenture/Labs-Federated-Learning/tree/impact_client_sampling).
+- Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. A General Theory for Federated Optimization with Asynchronous and Heterogeneous Clients Updates. Preprint.
+  - The paper can be found [here](https://arxiv.org/abs/2206.10189).
+  - The code can be found [here](https://github.com/Accenture/Labs-Federated-Learning/tree/asynchronous_FL).

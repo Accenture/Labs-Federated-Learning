@@ -12,3 +12,5 @@
 - Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. A General Theory for Federated Optimization with Asynchronous and Heterogeneous Clients Updates. Preprint.
   - The paper can be found [here](https://arxiv.org/abs/2206.10189).
   - The code can be found [here](https://github.com/Accenture/Labs-Federated-Learning/tree/asynchronous_FL).
+- Yann Fraboni, Richard Vidal, Laetitia Kameni, Marco Lorenzi. Sequential Informed Federated Unlearning: Efficient and Provable Client Unlearning in Federated Optimization. Preprint.
+

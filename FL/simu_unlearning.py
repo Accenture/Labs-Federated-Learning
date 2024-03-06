@@ -12,22 +12,36 @@ import torchvision
 import random
 from torch.utils.data import DataLoader
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
     """SIMULATES centralized. DESCRIPTION OF THE INPUTS IN README.md ."""
-
+    print('policy and aggregs: ', server.policy, exp.n_aggregs)
+    psi_increments = []
+    t_total, t_start = 0, 0
+    if exp.limit_train_iter:
+        iter_max = int(exp.limit_train_iter * server.train_length) 
     for r, (W_r, n_aggreg) in enumerate(zip(server.policy, exp.n_aggregs)):
+        print('r: ', r)
 
         # CHANGE THE GLOBAL MODEL TO HAVE ONE FORGETTING CLIENTS IN Wr
         server.forget_Wr(W_r)
+        if server.unlearn_scheme == "FedEraser":
+            server.t = t_start  # total aggregations * r in the FedEraser paper
+            print("\n", "starting iteration is ", server.t)
+
 
         T_loss_acc = 20
+        
+        
+        for t in range(t_start, n_aggreg):
 
-        for t in range(n_aggreg):
-
-            server.g_model.to(device)
+            server.g_model.to(server.device)
+            if exp.limit_train_iter:
+                print(exp.limit_train_iter, t, t_start, iter_max, W_r)
+            if exp.limit_train_iter and t > iter_max and W_r != []:
+                print("Stopping learning because of time constraint")
+                break
 
             # MEASURE GLOBAL LOSS AND ACC OF CURRENT GLOBAL MODEL
             if t % T_loss_acc == 0:
@@ -35,7 +49,11 @@ def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
                 if np.isnan(loss):
                     break
                 if acc >= server.stop_acc and t >= 50:
-                    break
+                    if server.compute_diff and server.unlearn_scheme == "SIFU":
+                        if t % 100 == 0:
+                            break
+                    else:
+                        break
                 elif acc >= server.stop_acc - 0.5:
                     T_loss_acc = 1
                 elif acc >= server.stop_acc - 1.:
@@ -55,24 +73,56 @@ def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
                 server.lr_l,
                 server.n_SGD,
                 server.lambd,
-                server.clip
+                server.clip,
+                server.compute_diff
             )
 
-            # AGGREGATED THE CLIENTS CONTRIBUTION TO CREATE THE NEW GLOBAL MODEL
+            if server.compute_diff:
+                local_models, local_grads = local_models
+                # if server.unlearn_scheme == "SIFU":
+                #     psi_increment = server.compute_psi_bound(local_grads, working_clients) 
+                #     psi_increments.append((psi_increment.item(), acc, server.lr_g))
+                #     if t % 100 == 0:
+                #         exp.save_model_history(t, server.g_model)
+
+            # AGGREGATE THE CLIENTS CONTRIBUTION TO CREATE THE NEW GLOBAL MODEL
             server.aggregation(local_models, server.g_model)
 
             # COMPUTE OUR METRIC
-            server.compute_metric(working_clients, local_models)
+            if server.unlearn_scheme == "FedEraser":
+                if t % server.delta_t == 0:
+                    server.compute_metric(working_clients, local_models, local_grads, clients)
+            else:
+                server.compute_metric(working_clients, local_models)
 
             # SAVE BEST MODEL PER CLIENT
             server.keep_best_model()
+        if W_r == []:
+            iter_max = int(exp.limit_train_iter * server.t) # If the model is not loaded from pre-trained, we set the iter max value here.
+        if server.unlearn_scheme == "FedEraser":
+            t_total += server.t-t_start
+            t_start = int(t_total / (server.delta_t * server.n_SGD / server.n_SGD_cali))  # total aggregations * r in the FedEraser paper
+        if server.train_length == 0 and server.unlearn_scheme != "train":
+            server.train_length = server.t
+        
+        
 
         # LOSS/ACCURACY ON NEW GLOBAL MODEL
+        
         server.loss_acc_global(clients)
 
         # SAVE THE BEST MODELS
-        if exp.unlearn_scheme =="train":
+
+        if server.unlearn_scheme == 'train':
+            print('Saving best models')
             exp.save_best_models(f"{exp.file_name}_{server.r}",
-                                 server.best_models[-1])
+                                server.best_models[-1])
+            
+        # SAVE PSI BOUND
+        # if server.compute_diff and server.unlearn_scheme == "SIFU":
+            # exp.save_psi_bound(psi_increments) #f"{exp.file_name}_{server.r}",
+            # exp.save_model_history(t, server.g_model)
 
         print("\n")
+
+

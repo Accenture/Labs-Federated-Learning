@@ -15,10 +15,10 @@ import pickle
 
 from policy import policies
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def noise_model(model: Module, sigma: float):
+
+def noise_model(model: Module, sigma: float, device: torch.device = "cpu"):
     """Aggregates the clients models to create the new model"""
 
     model.to(device)
@@ -45,15 +45,20 @@ class Server:
         self.sigma = args["sigma"]
         self.psi_star = psi(self.sigma, self.epsilon, self.M)
         self.stop_acc = args["stop_acc"]
-
-        self.clip = 10**4
-
+        self.compute_diff = args["compute_diff"]
+        self.device = args["device"]
+        self.clip = args["clip"]
         self.policy = [[]]
+        self.train_length = 0
+        self.model = args["model"]
+
         # if self.unlearn_scheme != "train":
         if self.unlearn_scheme in ["SIFU", "scratch", "fine-tuning", "last"]:
             self.policy = policies[args["forgetting"]]
         elif self.unlearn_scheme[:2] == "DP":
             self.policy += policies[args["forgetting"]]
+        elif self.unlearn_scheme == "train" and args["compute_diff"]:
+            self.policy = policies[args["forgetting"]]
 
         self.DP = args["unlearn_scheme"].split("_")[0] == "DP"
         if self.DP:
@@ -63,7 +68,7 @@ class Server:
             )
 
         # GLOBAL MODEL
-        self.model_0, self.loss_f = load_model(self.dataset_name, self.seed)
+        self.model_0, self.loss_f = load_model(self.dataset_name, self.model, self.seed)
         self.g_model = deepcopy(self.model_0)
 
         self.kept_clients = [i for i in range(self.M)]
@@ -111,6 +116,15 @@ class Server:
         self.loss[:, :hist_loss.shape[1]] = hist_load("loss")
         hist_metric = hist_load("metric")
         self.metric[:, :hist_metric.shape[1]] = hist_load("metric")
+        self.train_length = hist_loss.shape[1]
+        
+        print('\n')
+        print('\n')
+        print('histories')
+        print(self.acc.shape)
+        print(self.loss.shape)
+        print(self.metric.shape)
+
         print("Done.")
 
         self.r, self.t = 0, self.T
@@ -157,7 +171,7 @@ class Server:
             client = W_r[np.argmax(self.metric[zeta_r, T_r, W_r])]
 
             self.g_model = deepcopy(self.best_models[zeta_r][client])
-            noise_model(self.g_model, self.sigma)
+            noise_model(self.g_model, self.sigma, self.device)
 
             self.best_models.append(
                 [deepcopy(self.g_model) for _ in range(self.M)]
@@ -169,7 +183,7 @@ class Server:
         elif self.unlearn_scheme == "last":
             std = get_std(np.max(self.metric[self.r - 1]), self.epsilon, self.M)
             print(self.sigma, std)
-            noise_model(self.g_model, std)
+            noise_model(self.g_model, std, self.device)
 
         elif self.unlearn_scheme == "fine-tuning":
             # the global model remains the same without any change
@@ -210,11 +224,12 @@ class Server:
 
         # ADD THE CONTRIBUTIONS OF THE PARTICIPANTS
         for p_i, rec_i in zip(P, received_models):
+            ## change
             for new_w_k, r_w_ik in zip(model.parameters(), rec_i.parameters()):
                 new_w_k.data.add_(self.lr_g * p_i * r_w_ik)
 
         if self.DP:
-            noise_model(self.g_model, self.sigma_DP)
+            noise_model(self.g_model, self.sigma_DP, self.device)
 
         self.t += 1
 
@@ -244,10 +259,11 @@ class Server:
         loss_acc = np.array(
             [client.loss_acc(self.g_model, self.loss_f, "train") for client in clients]
         )
-        # print(loss_acc)
 
         self.loss[self.r, self.t] = loss_acc[:, 0]
         self.acc[self.r, self.t] = loss_acc[:, 1]
+        
+        # print(self.P_kept, self.loss[self.r, self.t])
 
         loss = np.dot(self.P_kept, self.loss[self.r, self.t])
         var_loss = np.dot(self.P_kept, (loss - self.loss[self.r, self.t]) ** 2) ** 0.5
@@ -261,3 +277,21 @@ class Server:
         )
 
         return loss, accs
+    
+    def compute_psi_bound(self, local_grads, working_clients):
+        """ Compute the distance between the aggregated gradients of all clients and the aggregated gradients of the kept clients"""
+        assert(len(self.policy) == 1)
+        policy = self.policy[0]  # Not great - needs adaptation to account for sequential requests measurement
+
+        with torch.no_grad():
+            N = len(working_clients)
+            M = N - len(policy)
+
+            psi_increment = torch.zeros_like(local_grads[0])
+
+            for i, client in enumerate(working_clients):
+                    weight = 1 / N
+                    if client not in policy:
+                        weight -= 1 / M
+                    psi_increment += weight * local_grads[i]
+            return torch.norm(psi_increment)

@@ -40,10 +40,6 @@ class TestAggregation(unittest.TestCase):
         self.server = Server(args, self.exp.psi_star)
         self.server.forget_Wr([])
 
-        # self.dls_train, _ = get_dataloaders(
-        #     args["dataset"], args["B"], self.exp.M, False)
-        #
-        # self.model, self.loss_f = load_model("test", 42)
 
     def test_branch_1(self):
         """metric is always too high. Should return (0,0) for any branch"""

@@ -8,12 +8,6 @@ from FL.experiment import Experiment
 from FL.server import Server
 from FL.client import Clients
 
-import torchvision
-import random
-from torch.utils.data import DataLoader
-
-
-
 def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
     """SIMULATES centralized. DESCRIPTION OF THE INPUTS IN README.md ."""
     print('policy and aggregs: ', server.policy, exp.n_aggregs)
@@ -79,11 +73,6 @@ def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
 
             if server.compute_diff:
                 local_models, local_grads = local_models
-                # if server.unlearn_scheme == "SIFU":
-                #     psi_increment = server.compute_psi_bound(local_grads, working_clients) 
-                #     psi_increments.append((psi_increment.item(), acc, server.lr_g))
-                #     if t % 100 == 0:
-                #         exp.save_model_history(t, server.g_model)
 
             # AGGREGATE THE CLIENTS CONTRIBUTION TO CREATE THE NEW GLOBAL MODEL
             server.aggregation(local_models, server.g_model)
@@ -117,11 +106,6 @@ def simu_unlearning(exp: Experiment, server: Server, clients: Clients):
             print('Saving best models')
             exp.save_best_models(f"{exp.file_name}_{server.r}",
                                 server.best_models[-1])
-            
-        # SAVE PSI BOUND
-        # if server.compute_diff and server.unlearn_scheme == "SIFU":
-            # exp.save_psi_bound(psi_increments) #f"{exp.file_name}_{server.r}",
-            # exp.save_model_history(t, server.g_model)
 
         print("\n")
 

@@ -63,10 +63,6 @@ class Client:
             with torch.no_grad():
                 predictions = model(features.to(self.device))
 
-            # print(predictions)
-            # print(labels.to(self.device))
-            # print(loss_batch)
-            # print(loss_f)
             loss_batch = loss_f(predictions, labels.to(self.device)).item()
 
             loss += loss_batch * len(features)

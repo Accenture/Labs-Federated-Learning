@@ -8,35 +8,13 @@ from FL.experiment import Experiment
 from torch.utils.data import Dataset, DataLoader
 import torch
 
-# from FL.clients_schedule import clients_time_schedule
-# from FL.clients_parameters import clients_parameters
 from FL.read_db import get_dataloaders
 from FL.create_model import load_model
 
 # from FL.FedProx import compute_psi_all, cut_branch, get_T_r
 from FL.FedProx import compute_psi_all, cut_branch, get_T_r
 
-# class simpleDataset(Dataset):
-#
-#     def __init__(self, X, y):
-#         self.features = torch.Tensor(X)
-#         self.labels = torch.Tensor(y)
-#
-#     def __len__(self):
-#         return len(self.features)
-#
-#     def __getitem__(self, idx):
-#         return self.features[idx], self.labels[idx]
 
-
-# class simpleLinear(torch.nn.Module):
-#     def __init__(self, inputSize: int, outputSize: int, seed=0):
-#         super(simpleLinear, self).__init__()
-#         torch.manual_seed(seed)
-#         self.linear = torch.nn.Linear(inputSize, outputSize, bias=True)
-#
-#     def forward(self, x):
-#         return F.relu(self.linear(x))
 
 
 class TestAggregation(unittest.TestCase):

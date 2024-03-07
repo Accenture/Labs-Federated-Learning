@@ -72,9 +72,6 @@ class Experiment:
         ]
         params = [str(p) for p in params]
         prefix = ["", "", "", "", "T", "K", "B", "lr_g", "lr_l", "M", "m", "p", "lam", "S"]
-        # if self.compute_diff:
-        #     prefix = ["", "", "", "T", "K", "B", "lr_g", "lr_l", "M", "m", "lam", "S"]
-        # params = [str(p) for p in params]
         file_name += "_".join([p + q for p, q in zip(prefix, params)])
             
 
@@ -107,13 +104,7 @@ class Experiment:
             f"--lambd {self.lambd} --stop_acc {self.stop_acc} --n_sampled {self.n_sampled} "
             f"--model {self.model} --iter_min {self.iter_min} "
         )
-        # string = (
-        #     f"--dataset_name {self.dataset_name} --unlearn_scheme {self.unlearn_scheme} "
-        #     f"--T {self.T} --n_SGD {self.n_SGD} "
-        #     f"--B {self.B} --lr_g {self.lr_g} --lr_l {self.lr_l} --M {self.M} "
-        #     f"--seed {self.seed} --forgetting {self.forgetting} "
-        #     f"--lambd {self.lambd} --stop_acc {self.stop_acc} --n_sampled {self.n_sampled} "
-        # )
+
         if self.unlearn_scheme in ["train", "SIFU", "scratch", "last", "fine-tuning"]:
             string += f"--epsilon {self.epsilon} --sigma {self.sigma} "
         elif self.unlearn_scheme[:2] == "DP":
@@ -123,7 +114,7 @@ class Experiment:
         return string
 
     def hist_load(self, metric: str) -> np.array:
-        directories = ["saved_exp_info_iter", "saved_exp_info_send", "saved_exp_info_2", "saved_exp_info", "limit iter saved", "saved_exp_info_ori"]  # directories to attempt loading from
+        directories =  ["saved_exp_info"]  # directories to attempt loading from
         hist = None
 
         for directory in directories:
@@ -132,8 +123,6 @@ class Experiment:
                 with open(file_path, "rb") as file_content:
                     hist = pickle.load(file_content)
                 break
-            # else:
-            #     print(f"File not found at {file_path}, trying next directory if available.")
 
         if hist is None:
             print(f"File {self.file_name} could not be found in any of the directories.")

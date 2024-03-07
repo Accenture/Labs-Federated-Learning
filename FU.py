@@ -44,7 +44,7 @@ parser.add_argument("--forgetting", type=str, help="forgetting requests policy",
 parser.add_argument("--T", type=int, help="training time", default=10)
 parser.add_argument("--B", type=int, help="batch size", default=128)
 parser.add_argument("--n_SGD", type=int, help="Number of SGD", default=1)
-parser.add_argument("--n_SGD_cali", type=int, help="Number of SGD for calibration", default=2)
+parser.add_argument("--n_SGD_cali", type=int, help="Number of SGD for calibration", default=0)
 parser.add_argument("--delta_t", type=int, help="Number of step to wait between two gradients estimations", default=2)
 parser.add_argument("--lr_g", type=float, help="global lr", default=1.0)
 parser.add_argument("--lr_l", type=float, help="local lr", default=0.01)

@@ -7,13 +7,10 @@ from torch.nn import Module
 from copy import deepcopy
 
 from FL.create_model import load_model
-from FL.branch import Branch
 from FL.client import Clients
 
 import random
-from FL.privacy import psi, get_std
-import pickle
-
+from FL.privacy import psi
 from policy import policies
 
 
@@ -59,9 +56,7 @@ class Server:
         
         self.model_0, self.loss_f = load_model(self.dataset_name, self.model_type, self.seed)
         
-        #self.model_type,
         self.g_model = deepcopy(self.model_0).to(self.device)
-        # self.accum_model = deepcopy(self.model_0).to(self.device)
         self.kept_clients = [i for i in range(self.M)]
         self.P_kept = np.ones(self.M) / self.M
         
@@ -170,13 +165,8 @@ class Server:
                         accum_model
                     )
             
-            
-            # for i, j in zip(self.g_model.parameters(), self.accum_models[0].parameters()):
-            #     print(torch.norm(i - j))
-            
         elif self.unlearn_scheme == "FedEraser":
             # COMPUTE THE CALIBRATED MODEL
-            # W_r = self.policy[min(self.r+1, len(self.policy)-1)]
             # Norms of local gradients on the clients not in W_r
             
             for accum_model, removed_clients in zip(self.accum_models, self.removed_clients_list):

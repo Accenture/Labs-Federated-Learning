@@ -160,53 +160,6 @@ def dataloaders_dirichlet(
     return dls
 
 
-
-
-"""
------------
-FEMNIST Dataset
------------
-"""
-
-
-# class FEMNISTdataset(Dataset):
-#
-#     def __init__(self, data, user):
-#
-#         self.features = torch.tensor(data["user_data"][user]["x"])
-#         # print(self.features.shape)
-#         self.labels = torch.tensor(data["user_data"][user]["y"]).long()
-#
-#     def __len__(self):
-#         return len(self.features)
-#
-#     def __getitem__(self, idx):
-#         return self.features[idx], self.labels[idx]
-#
-#
-# def clients_set_FEMNIST(path: str, batch_size: int, n_clients: int, shuffle=True):
-#     """Download for all the clients their respective dataset"""
-#
-#     list_json = os.listdir(path)
-#     list_json = sorted(list_json)
-#
-#     list_dls = []
-#     n_users = 0
-#     for js in list_json:
-#
-#         with open(path + js) as json_file:
-#             data = json.load(json_file)
-#
-#         for user in data["users"]:
-#             dataset = FEMNISTdataset(data, user)
-#             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
-#             list_dls.append(dataloader)
-#
-#             n_users += 1
-#             if n_users == n_clients:
-#                 return list_dls
-
-
 """
 ---------
 Simple dataset used for testing
@@ -367,22 +320,6 @@ def dl_celeba(dataset_name: str, backdoored: bool, batch_size: int, n_clients: i
         for ds in dss]
     return dls
 
-# def dl_celeba(batch_size: int, n_clients: int, trans: transforms) -> DataLoader:
-#
-#
-#     ds = torchvision.datasets.CelebA(root="./data", download=True, transform=trans)
-#
-#     path_train = f"data/celeba_M{n_clients}.pkl"
-#     dss = [ClientDatasetCeleba(path_train, i, trans) for i in range(n_clients)]
-#
-#     dls = [DataLoader(
-#         ds, batch_size=min(batch_size, len(ds)), shuffle=True
-#     )
-#         for ds in dss]
-#     return dls
-
-
-
 
 
 
@@ -390,17 +327,6 @@ class ClientDatasetCeleba(Dataset):
     def __init__(self, path: str, i: int, trans: transforms):
 
         dataset = pickle.load(open(path, "rb"))
-
-        # idx_client = dataset.identity[dataset.identity == i]
-        #
-        # self.features, self.labels = [], []
-        #
-        # for idx in idx_client:
-        #     self.features.append(dataset[idx][0])
-        #     self.labels.append(dataset[idx][1])
-
-
-
         self.features = [Image.fromarray(arr) for arr in dataset[0][i]]
         self.labels = torch.Tensor(dataset[1][i][:, 31]).long() #smiling
 
@@ -516,47 +442,6 @@ def get_dataloaders(
         print("Participating clients:", len(dls_train))
 
     return dls_train, dls_test
-
-    # if dataset == "test":
-    #     dls_train, dls_test = create_test_dataset()
-    #     return dls_train, dls_test
-
-    # elif dataset == "Regression":
-    #
-    #     ds_train = [RegressionDataset(k, n_clients) for k in range(n_clients)]
-    #     dls_train = [
-    #         DataLoader(ds, batch_size=10, shuffle=True) for ds in ds_train
-    #     ]
-    #     dls_test = dls_train
-
-    # elif dataset == "MNIST":
-    #
-    #     dls_train, _ = create_MNIST_iid(n_clients, batch_size)
-    #     dls_test = dls_train
-
-
-    # elif dataset == "FEMNIST":
-    #
-    #     if not os.path.isdir("data/leaf/data/femnist/data/train/"):
-    #         os.chdir("data/leaf/data/femnist")
-    #         os.system(
-    #             "bash ./preprocess.sh -s niid --sf 0.05 -k 0 -t sample "
-    #             "--tf 0.8 --smplseed 0 --spltseed 0"
-    #         )
-    #         print("FEMNIST dataset created")
-    #         os.chdir("../../../../")
-    #     else:
-    #         print("FEMNIST dataset already created")
-    #
-    #     path_train = "data/leaf/data/femnist/data/train/"
-    #     dls_train = clients_set_FEMNIST(path_train, batch_size, n_clients)
-    #
-    #     path_test = "data/leaf/data/femnist/data/test/"
-    #
-    #     dls_test = clients_set_FEMNIST(path_test, batch_size, n_clients)
-    #
-    #
-
 
 if __name__ == "__main__":
     create_pkl_celeba('data/celeba_backdoored_M100.pkl', 100, backdoored=True)

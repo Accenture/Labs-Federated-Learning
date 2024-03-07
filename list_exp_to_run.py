@@ -321,33 +321,6 @@ append_experiments(
     n_seeds=n_seeds_DP
 )
 
-#
-# # EXPLORATION
-# append_experiments(
-#     txt_name="FL_MNIST.txt",
-#     experiment=FL.experiment.Experiment,
-#     l_dataset=["MNIST-shard_0"],
-#     l_unlearn_scheme=l_SIFU,
-#     l_forgetting=["P9"],
-#     l_P_type=["uniform"],
-#     l_T=[10**4],
-#     l_n_SGD=[5, 10],
-#     l_B=[100],
-#     l_lr_g=[1.],
-#     l_lr_l=[0.005],
-#     l_M=[100],
-#     l_m=[25],
-#     l_p_rework=[1.],
-#     l_epsilon=[10.],
-#     # l_sigma=[0.01, 0.1, 0.2],
-#     l_sigma=l_std,
-#     l_lambd=[0.],
-#     l_stop_acc=[92.],
-#     l_model=["default"],
-#     verbose=args["verbose"]
-# )
-
-
 print("\n")
 
 # SHOW THAT IT WORKS ON IFU AND SIFU

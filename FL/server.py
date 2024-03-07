@@ -281,7 +281,7 @@ class Server:
     def compute_psi_bound(self, local_grads, working_clients):
         """ Compute the distance between the aggregated gradients of all clients and the aggregated gradients of the kept clients"""
         assert(len(self.policy) == 1)
-        policy = self.policy[0]  # Not great - needs adaptation to account for sequential requests measurement
+        policy = self.policy[0]  # Handles non-sequential unlearning requests
 
         with torch.no_grad():
             N = len(working_clients)

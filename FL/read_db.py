@@ -301,8 +301,6 @@ def dl_celeba(dataset_name: str, backdoored: bool, batch_size: int, n_clients: i
               trans: transforms) -> DataLoader:
 
     path_train = f"data/{dataset_name}_M{n_clients}.pkl"
-    # if backdoored:
-    #     path_train = f"data/celeba_backdoored_M{n_clients}.pkl"
 
     try:
         dss = [ClientDatasetCeleba(path_train, i, trans) for i in range(n_clients)]

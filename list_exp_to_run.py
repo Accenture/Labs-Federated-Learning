@@ -74,7 +74,7 @@ def append_experiments(
     # l_C: list[float] = [1.],
     l_model: list[float],
     n_seeds=1,
-    verbose = False
+    verbose=False,
 ):
 
     for (
@@ -135,7 +135,7 @@ def append_experiments(
             "lambd": lambd,
             "mu": 0,
             "stop_acc": stop_acc,
-            "model": model
+            "model": model,
         }
 
         for seed in range(n_seeds):
@@ -173,8 +173,8 @@ for learning_type, dataset in product(
 l_std = [a * 10**-b for a, b in product([1., 2., 5.], [0, 1, 2, 3, 4])]
 l_std.sort()
 
-l_SIFU = ["train", "scratch", "SIFU", "fine-tuning", "FedAccum"]
-l_SIFU_std = ["train", "scratch", "SIFU", "fine-tuning", "FedAccum"]
+l_SIFU = ["train", "scratch", "SIFU", "fine-tuning", "FedAccum", "FedEraser"]
+l_SIFU_std = ["train", "scratch", "SIFU", "fine-tuning", "FedAccum", "FedEraser"]
 
 n_seeds_main = 10
 n_seeds_std = 5
@@ -320,33 +320,6 @@ append_experiments(
     verbose=args["verbose"],
     n_seeds=n_seeds_DP
 )
-
-#
-# # EXPLORATION
-# append_experiments(
-#     txt_name="FL_MNIST.txt",
-#     experiment=FL.experiment.Experiment,
-#     l_dataset=["MNIST-shard_0"],
-#     l_unlearn_scheme=l_SIFU,
-#     l_forgetting=["P9"],
-#     l_P_type=["uniform"],
-#     l_T=[10**4],
-#     l_n_SGD=[5, 10],
-#     l_B=[100],
-#     l_lr_g=[1.],
-#     l_lr_l=[0.005],
-#     l_M=[100],
-#     l_m=[25],
-#     l_p_rework=[1.],
-#     l_epsilon=[10.],
-#     # l_sigma=[0.01, 0.1, 0.2],
-#     l_sigma=l_std,
-#     l_lambd=[0.],
-#     l_stop_acc=[92.],
-#     l_model=["default"],
-#     verbose=args["verbose"]
-# )
-
 
 print("\n")
 
@@ -880,4 +853,54 @@ append_experiments(
     l_model=["CNN"],
     verbose=args["verbose"],
     n_seeds=n_seeds_std
+)
+
+
+# SHOW THAT IT WORKS ON IFU AND SIFU
+append_experiments(
+    txt_name="FL_celeba.txt",
+    experiment=FL.experiment.Experiment,
+    l_dataset=["celeba-leaf"],
+    l_unlearn_scheme=l_SIFU + ["DP_0.5"],
+    l_forgetting=["P9"],
+    l_P_type=["uniform"],
+    l_T=[10**4],
+    l_n_SGD=[10],
+    l_B=[20],
+    l_lr_g=[1.],
+    l_lr_l=[0.01],
+    l_M=[100],
+    l_m=[20],
+    l_p_rework=[1.],
+    l_epsilon=[10.],
+    l_sigma=[0.1],
+    l_lambd=[0.],
+    l_stop_acc=[99.9],
+    l_model=["CNN"],
+    verbose=args["verbose"],
+    n_seeds=n_seeds_main
+)
+
+append_experiments(
+    txt_name="FL_celeba.txt",
+    experiment=FL.experiment.Experiment,
+    l_dataset=["celeba-leaf"],
+    l_unlearn_scheme=l_SIFU + ["DP_0.5"],
+    l_forgetting=["P9"],
+    l_P_type=["uniform"],
+    l_T=[10**4],
+    l_n_SGD=[10],
+    l_B=[20],
+    l_lr_g=[1.],
+    l_lr_l=[0.01],
+    l_M=[100],
+    l_m=[20],
+    l_p_rework=[1.],
+    l_epsilon=[10.],
+    l_sigma=[0.1],
+    l_lambd=[0.],
+    l_stop_acc=[99.9],
+    l_model=["CNN"],
+    verbose=args["verbose"],
+    n_seeds=n_seeds_main
 )

@@ -160,6 +160,68 @@ def dataloaders_dirichlet(
     return dls
 
 
+"""
+---------
+Simple dataset used for testing
+with only two clients
+---------
+"""
+
+
+class SimpleDataset(Dataset):
+    def __init__(self, features, y):
+        self.features = torch.Tensor(features)
+        self.labels = torch.Tensor(y)
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        return self.features[idx], self.labels[idx]
+
+
+def create_test_dataset():
+
+    ds_train = [
+        SimpleDataset([[0], [1], [2]], [[0], [1], [2]]),
+        SimpleDataset([[0], [1], [2]], [[0], [2], [4]]),
+    ]
+    dls_train = [DataLoader(ds, batch_size=10, shuffle=True) for ds in ds_train]
+
+    return dls_train, dls_train
+
+
+"""
+---------
+Regression
+---------
+"""
+
+
+class RegressionDataset(Dataset):
+    def __init__(self, k, n_clients):
+
+        np.random.seed(k)
+
+        dim = 1
+        n_samples = 10 ** 3
+
+        features = np.random.uniform(0, 1, (n_samples, dim))
+        if k <= 2:
+            mu = 0.5
+        else:
+            mu = 1.0
+        mu = np.array([k / (n_clients - 1)] * dim)
+        y = features.dot(mu).reshape(-1, 1)  # + np.random.normal(0, 0.1, size=(n_samples, 1))
+
+        self.features = torch.Tensor(features)
+        self.labels = torch.Tensor(y)
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        return self.features[idx], self.labels[idx]
 
 """
 ---------
@@ -174,7 +236,7 @@ def create_pkl_celeba(path_train: str, n_clients: int, backdoored: bool):
 
     list_X, list_y = [], []
     X, y = [], []
-
+    
     for i in range(len(ds)):
         idx_client = torch.where(ds.identity == i+1)[0]
 
@@ -201,18 +263,53 @@ def create_pkl_celeba(path_train: str, n_clients: int, backdoored: bool):
         pickle.dump((list_X, list_y), output)
 
 
-def dl_celeba(backdoored: bool, batch_size: int, n_clients: int,
+def create_pkl_celeba_leaf(path_train: str, n_clients: int, backdoored: bool):
+
+    ds = torchvision.datasets.CelebA(root="./data", download=True,
+                                     transform=transforms.Resize((64, 64)))
+
+    list_X, list_y = [], []
+    # X, y = [], []
+
+    for i in range(len(ds)):
+        idx_client = torch.where(ds.identity == i+1)[0]
+
+        X = [np.array(ds[idx][0]) for idx in idx_client]
+        y = [np.array(ds[idx][1]) for idx in idx_client]
+
+        if len(X) >= 25:
+        #     GIVE THE 'client' ITS FEATURES AND LABELS
+            if not backdoored:
+                list_X.append(np.array(X[:100]))
+            elif backdoored:
+                list_X.append(np.array(
+                    [backdoor(np.array(img), i%10) for img in X[:100]]
+                ))
+
+            list_y.append(np.array(y[:100]))
+            # X, y = [], []
+
+        if len(list_X) == n_clients:
+            break
+
+    # Save clients dataset
+    with open(path_train, "wb") as output:
+        pickle.dump((list_X, list_y), output)
+
+
+def dl_celeba(dataset_name: str, backdoored: bool, batch_size: int, n_clients: int,
               trans: transforms) -> DataLoader:
 
-    path_train = f"data/celeba_M{n_clients}.pkl"
-    if backdoored:
-        path_train = f"data/celeba_backdoored_M{n_clients}.pkl"
+    path_train = f"data/{dataset_name}_M{n_clients}.pkl"
 
     try:
         dss = [ClientDatasetCeleba(path_train, i, trans) for i in range(n_clients)]
     except:
         print("create pkl files")
-        create_pkl_celeba(path_train, n_clients, backdoored)
+        if dataset_name == "celeba":
+            create_pkl_celeba(path_train, n_clients, backdoored)
+        elif dataset_name == "celeba-leaf":
+            create_pkl_celeba_leaf(path_train, n_clients, backdoored)
         dss = [ClientDatasetCeleba(path_train, i, trans) for i in range(n_clients)]
 
     dls = [DataLoader(
@@ -224,14 +321,10 @@ def dl_celeba(backdoored: bool, batch_size: int, n_clients: int,
 
 
 
-
-
-
 class ClientDatasetCeleba(Dataset):
     def __init__(self, path: str, i: int, trans: transforms):
 
         dataset = pickle.load(open(path, "rb"))
-
         self.features = [Image.fromarray(arr) for arr in dataset[0][i]]
         self.labels = torch.Tensor(dataset[1][i][:, 31]).long() #smiling
 
@@ -246,6 +339,23 @@ class ClientDatasetCeleba(Dataset):
 
 
 
+
+class addBackDoor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, img: torch.Tensor):
+
+        x, y, z = img.shape
+
+        np.random.seed(42)
+        for _ in range(4):
+            pixel = (np.random.randint(x),
+                     np.random.randint(y),
+                     np.random.randint(z))
+            img[pixel] = 1.
+        return img
+
+
 """
 ---------
 Combine them all
@@ -256,7 +366,7 @@ Combine them all
 
 def get_dataloaders(
         dataset_name: str, batch_size: int, n_clients: int, verbose=True
-) -> (list, list):
+):
 
     # Reproductibility in the creation of the datasets
     np.random.seed(0)
@@ -303,8 +413,7 @@ def get_dataloaders(
         dls_test = dls_train
 
 
-    elif dataset_name.split("_")[0] == "celeba":
-
+    elif dataset_name.split("_")[0] in ["celeba", "celeba-leaf"]:
         backdoored = False
         if len(dataset_name.split("_")) == 2:
             backdoored = dataset_name.split("_")[1] == "backdoored"
@@ -316,7 +425,8 @@ def get_dataloaders(
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
-        dls_train = dl_celeba(backdoored, batch_size, n_clients, trans_train)
+        dls_train = dl_celeba(dataset_name, backdoored,
+                              batch_size, n_clients, trans_train)
         dls_test = dls_train
 
 
@@ -330,3 +440,6 @@ def get_dataloaders(
         print("Participating clients:", len(dls_train))
 
     return dls_train, dls_test
+
+if __name__ == "__main__":
+    create_pkl_celeba('data/celeba_backdoored_M100.pkl', 100, backdoored=True)

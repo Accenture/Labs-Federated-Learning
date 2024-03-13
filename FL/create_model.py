@@ -18,32 +18,18 @@ class LogisticRegression(nn.Module):
         return x
 
 
-
-
-
-class LSTM_Shakespeare(torch.nn.Module):
-    def __init__(self):
-        super(LSTM_Shakespeare, self).__init__()
-        self.n_characters = 100
-        self.hidden_dim = 100
-        self.n_layers = 2
-        self.len_seq = 80
-        self.batch_size = 100
-        self.embed_dim = 8
-
-        self.embed = torch.nn.Embedding(self.n_characters, self.embed_dim)
-
-        self.lstm = torch.nn.LSTM(self.embed_dim, self.hidden_dim, self.n_layers, batch_first=True)
-
-        self.fc = nn.Linear(self.hidden_dim, self.n_characters)
+class TwoLayers(nn.Module):
+    def __init__(self, layer_1, layer_2, layer_3):
+        super(TwoLayers, self).__init__()
+        self.fc1 = nn.Linear(layer_1, layer_2)
+        self.last = nn.Linear(layer_2, layer_3)
+        self.layer_1 = layer_1
 
     def forward(self, x):
-
-        embeded_x = self.embed(x)
-        output, _ = self.lstm(embeded_x)
-        output = self.fc(output[:, -1])
-        return output
-
+        x = self.fc1(x.view(-1, self.layer_1))
+        x = F.leaky_relu(x)
+        x = self.last(x)
+        return x
 
 class CNN_Celeba(nn.Module):
     def __init__(self, in_channels=3, num_classes=2):
@@ -60,6 +46,7 @@ class CNN_Celeba(nn.Module):
         out = self.pool(self.cnn2(out))
         out = self.pool(self.cnn3(out))
         out = out.reshape(out.size(0), -1)
+        #         print(out.shape)
         out = self.fc1(out)
         return out
 
@@ -161,6 +148,18 @@ class CNN_FashionMNIST(nn.Module):
         return pred
 
 
+class simpleLinear(torch.nn.Module):
+    def __init__(self, inputSize: int, outputSize: int, seed=0):
+        super(simpleLinear, self).__init__()
+        torch.manual_seed(seed)
+        self.last = torch.nn.Linear(inputSize, outputSize, bias=True)
+
+    def params(self):
+        return [layer.data.numpy() for layer in self.parameters()][0][0, 0]
+
+    def forward(self, x):
+        return self.last(x)
+
 
 class CNN_celeba(nn.Module):
     def __init__(self, in_channels: int =3, num_classes: int =2):
@@ -177,12 +176,11 @@ class CNN_celeba(nn.Module):
         out = self.pool(self.cnn2(out))
         out = self.pool(self.cnn3(out))
         out = out.reshape(out.size(0), -1)
-        #         print(out.shape)
         out = self.fc1(out)
         return out
 
 
-def load_model(dataset_name: str, seed: int = 42) -> (nn.Module, F):
+def load_model(dataset_name: str, model_type: str="default", seed: int =42):
 
     torch.manual_seed(seed)
 
@@ -194,23 +192,31 @@ def load_model(dataset_name: str, seed: int = 42) -> (nn.Module, F):
 
     elif dataset == "FashionMNIST":
         model = CNN_FashionMNIST()
+
         loss_f = torch.nn.CrossEntropyLoss()
 
     elif dataset == "CIFAR10":
-        model = CNN_CIFAR()
+        if model_type == "default":
+            assert False, "only the CNN is programmed with CIFAR10"
+        elif model_type == "CNN":
+            model = CNN_CIFAR()
+
         loss_f = torch.nn.CrossEntropyLoss()
 
     elif dataset == "CIFAR100":
-        model = CNN_CIFAR100()
-        loss_f = torch.nn.CrossEntropyLoss()
+        if model_type == "default":
+            assert False, "only the CNN is programmed with CIFAR100"
+        elif model_type == "CNN":
+            model = CNN_CIFAR100()
 
-    elif dataset == "Shakespeare":
-        model = LSTM_Shakespeare()
-        loss_f = torch.nn.CrossEntropyLoss()
+            loss_f = torch.nn.CrossEntropyLoss()
 
-    elif dataset == "celeba":
-        model = CNN_Celeba()
-        loss_f = torch.nn.CrossEntropyLoss()
+    elif dataset in ["celeba", "celeba-leaf"]:
+        if model_type == "default":
+            assert False, "only the CNN is programmed with celeba"
+        elif model_type == "CNN":
+            model = CNN_Celeba()
+            loss_f = torch.nn.CrossEntropyLoss()
 
     print(model)
 

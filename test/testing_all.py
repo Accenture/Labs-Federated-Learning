@@ -25,17 +25,6 @@ class simpleDataset(Dataset):
     def __getitem__(self, idx):
         return self.features[idx], self.labels[idx]
 
-
-# class simpleLinear(torch.nn.Module):
-#     def __init__(self, inputSize: int, outputSize: int, seed=0):
-#         super(simpleLinear, self).__init__()
-#         torch.manual_seed(seed)
-#         self.linear = torch.nn.Linear(inputSize, outputSize, bias=True)
-#
-#     def forward(self, x):
-#         return F.relu(self.linear(x))
-
-
 class TestAggregation(unittest.TestCase):
     def setUp(self):
         args = {
